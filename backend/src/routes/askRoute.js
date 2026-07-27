@@ -1,6 +1,5 @@
 const express = require("express");
 const estimateTokens = require("../utils/tokenCounter");
-// const logRequest = require("../utils/logger");
 
 const retrieverAgent = require("../agents/retrieverAgent");
 const summaryAgent = require("../agents/summaryAgent");
@@ -15,39 +14,56 @@ router.post("/", async (req, res) => {
 
     const requestStart = Date.now();
 
-    //======= retriever
     console.log("Request received");
+
+    // ================= RETRIEVER =================
+
     console.log("Starting Retriever...");
     const context = await retrieverAgent(question, optimized);
     console.log("Retriever completed");
 
     const contextTokens = estimateTokens(context);
 
-    //-========summary
-    console.log("Starting Summary...");
-    const summary = await summaryAgent(context);
-    if (!summary) {
-      throw new Error("Summary Agent returned empty output");
-    }
-    const summaryTokens = estimateTokens(summary);
-    console.log("Summary completed");
+    let processedText = context;
+    let summaryTokens = contextTokens;
 
-    //======= formatter
+    // ================= SUMMARY =================
+
+    if (optimized && contextTokens > 80) {
+      console.log("Large context detected. Running Summary Agent...");
+
+      processedText = await summaryAgent(context);
+
+      if (!processedText) {
+        throw new Error("Summary Agent returned empty output");
+      }
+
+      summaryTokens = estimateTokens(processedText);
+
+      console.log("Summary completed");
+    } else {
+      console.log("Skipping Summary Agent (context already small)");
+    }
+
+    // ================= FORMATTER =================
+
     console.log("Starting Formatter...");
-    const finalResponse = await formatterAgent(summary);
+
+    const finalResponse = await formatterAgent(processedText);
+
     if (!finalResponse) {
       throw new Error("Formatter Agent returned empty output");
     }
-    const formattedTokens = estimateTokens(finalResponse);
+
+    const finalTokens = estimateTokens(finalResponse);
+
     console.log("Formatter completed");
 
-    const totalTime = Date.now() - requestStart;
+    const latency = Date.now() - requestStart;
 
-    console.log("Question:", question);
-    console.log("Context Tokens:", contextTokens);
+    console.log("Context Tokens :", contextTokens);
     console.log("Summary Tokens:", summaryTokens);
-    console.log("Final Tokens:", formattedTokens);
-    console.log("Latency:", totalTime, "ms");
+    console.log("Final Tokens  :", finalTokens);
 
     res.json({
       success: true,
@@ -57,12 +73,13 @@ router.post("/", async (req, res) => {
         optimized,
         contextTokens,
         summaryTokens,
-        finalTokens: formattedTokens,
-        latencyMs: totalTime,
+        finalTokens,
+        latencyMs: latency,
       },
     });
+
   } catch (err) {
-    console.error("Pipeline Error:", err.message);
+    console.error(err);
 
     res.status(500).json({
       success: false,
