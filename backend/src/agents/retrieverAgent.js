@@ -1,14 +1,29 @@
+const documents = require("../knowledge/docs");
+
 async function retrieverAgent(question) {
-  console.log("retriever Agent Running....");
 
-  const context = `
-Docker is a containerization platform.
-Kubernetes is an orchestration platform.
-Docker packages applications.
-Kubernetes manages containers at scale.
-`;
+    console.log("Retriever Agent Running...");
 
-  return context;
+    const query = question.toLowerCase();
+
+    let context = "";
+
+    for(const doc of documents){
+
+        if(query.includes(doc.topic)){
+
+            context += doc.content + "\n";
+        }
+
+    }
+
+    if(context===""){
+
+        context = "No matching document found.";
+
+    }
+
+    return context;
 }
 
 module.exports = retrieverAgent;
