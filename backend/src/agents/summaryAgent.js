@@ -22,11 +22,12 @@ ${context}
 
 Update the conversation summary in under 120 words.
 `;
-  await new Promise(resolve => setTimeout(resolve, 7000));
+
   const summary = await askLLM(prompt);
+
   updateConversationSummary(summary);
 
-  return null;
+  return summary;
 }
 
 module.exports = summaryAgent;
