@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use("/ask", askRoute);
 
-app.get("/", (req, res, next) => {
+app.get("/", (req, res) => {
   res.send("Ai Agent Pipeline Running ");
 });
 

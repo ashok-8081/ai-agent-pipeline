@@ -11,7 +11,7 @@ async function askLLM(prompt) {
     message: [
       {
         role: "user",
-        content: promp,
+        content: prompt,
       },
     ],
     temperatur: 0.3,

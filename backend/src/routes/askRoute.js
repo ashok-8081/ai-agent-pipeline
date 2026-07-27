@@ -1,6 +1,6 @@
 const express = require("express");
 const estimateTokens = require("../utils/tokenCounter");
-const logRequest = require("../utils/logger");
+// const logRequest = require("../utils/logger");
 
 const retrieverAgent = require("../agents/retrieverAgent");
 const summaryAgent = require("../agents/summaryAgent");
