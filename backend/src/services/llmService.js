@@ -1,20 +1,21 @@
 const Groq = require("groq-sdk");
 
-const qroq = new Groq({
+const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
 async function askLLM(prompt) {
-  const response = await qroq.chat.completions.create({
+  const response = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile",
 
-    message: [
+    messages: [
       {
         role: "user",
         content: prompt,
       },
     ],
-    temperatur: 0.3,
+
+    temperature: 0.3,
   });
 
   return response.choices[0].message.content;
