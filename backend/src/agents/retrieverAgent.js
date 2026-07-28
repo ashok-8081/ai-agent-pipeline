@@ -1,39 +1,43 @@
-const documents = require("../knowledge/docs");
+const askLLM = require("../services/llmService");
+const docs = require("../knowledge/docs");
 
 async function retrieverAgent(question, optimized = true) {
+  console.log("Retriever Agent Running...");
 
-    console.log("Retriever Agent Running...");
+  const query = question.toLowerCase();
 
-    if (!optimized) {
+  // Search local knowledge base
+  const document = docs.find((doc) =>
+    doc.title.toLowerCase().includes(query) ||
+    doc.content.toLowerCase().includes(query)
+  );
 
-        console.log("Running Expensive Pipeline...");
+  // If found locally
+  if (document) {
+    console.log("Local document found.");
 
-        return documents.map(doc => doc.content).join("\n");
-
+    if (optimized) {
+      // Return only the relevant content
+      return document.content;
     }
 
-    const query = question.toLowerCase();
+    // Non-optimized mode (simulate sending extra context)
+    return `
+Title: ${document.title}
 
-    let context = "";
+${document.content}
 
-    for (const doc of documents) {
+Extra Notes:
+This section contains additional information that increases token usage.
+`;
+  }
 
-        if (query.includes(doc.topic)) {
+  // Fallback to LLM
+  console.log("No local document found. Asking Groq...");
 
-            context += doc.content + "\n";
+  const answer = await askLLM(question);
 
-        }
-
-    }
-
-    if (context === "") {
-
-        context = "No matching document found.";
-
-    }
-
-    return context;
-
+  return answer;
 }
 
 module.exports = retrieverAgent;
