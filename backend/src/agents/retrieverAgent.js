@@ -6,38 +6,41 @@ async function retrieverAgent(question, optimized = true) {
 
   const query = question.toLowerCase();
 
-  // Search local knowledge base
-  const document = docs.find((doc) =>
-    doc.title.toLowerCase().includes(query) ||
-    doc.content.toLowerCase().includes(query)
-  );
+  // Split the user's question into words
+  const queryWords = query.split(" ");
 
-  // If found locally
+  // Search local knowledge base
+  const document = docs.find((doc) => {
+    const topic = (doc.topic || "").toLowerCase();
+    const content = (doc.content || "").toLowerCase();
+
+    return queryWords.some(
+      (word) => topic.includes(word) || content.includes(word)
+    );
+  });
+
+  // Local document found
   if (document) {
-    console.log("Local document found.");
+    console.log("Found local document:", document.topic);
 
     if (optimized) {
-      // Return only the relevant content
       return document.content;
     }
 
-    // Non-optimized mode (simulate sending extra context)
     return `
-Title: ${document.title}
+Topic: ${document.topic}
 
 ${document.content}
 
 Extra Notes:
-This section contains additional information that increases token usage.
+This is additional information added intentionally to simulate higher token usage.
 `;
   }
 
-  // Fallback to LLM
-  console.log("No local document found. Asking Groq...");
+  // No local document → Ask Groq
+  console.log("No local document found. Falling back to Groq...");
 
-  const answer = await askLLM(question);
-
-  return answer;
+  return await askLLM(question);
 }
 
 module.exports = retrieverAgent;
